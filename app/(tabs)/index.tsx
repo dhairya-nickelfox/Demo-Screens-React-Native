@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, TextInput } from 'react-native';
 
 export default function HomeScreen() {
   const [otp, setOtp] = useState(['', '', '', '']);
@@ -59,52 +59,53 @@ export default function HomeScreen() {
 
 
   return (
-    <View style={styles.container}>
-      <View style={styles.titleContainer}>
-        <Text style={styles.optText}>OTP Verification</Text>
-        <Text style={styles.instructionText}>Enter the 4 digit code sent to</Text>
-        <View style={styles.emailContainer}>
-          <Text style={styles.emailText}>john@email.com</Text>
-          <Image style={styles.editIcon} source={require('../../assets/images/edit-3.png')} />
-        </View>
-      </View>
+    // <View style={styles.container}>
+    //   <View style={styles.titleContainer}>
+    //     <Text style={styles.optText}>OTP Verification</Text>
+    //     <Text style={styles.instructionText}>Enter the 4 digit code sent to</Text>
+    //     <View style={styles.emailContainer}>
+    //       <Text style={styles.emailText}>john@email.com</Text>
+    //       <Image style={styles.editIcon} source={require('../../assets/images/edit-3.png')} />
+    //     </View>
+    //   </View>
       
-      <View style={styles.otpContainer}>
-        {otp.map((digit, index) => (
-          <TouchableOpacity
-            key={index}
-            style={[
-              styles.otpBox,
-              focusedIndex === index && styles.otpBoxFocused
-            ]}
-            onPress={() => handleBoxPress(index)}
-          >
-            <Text style={styles.otpDigit}>{digit}</Text>
-          </TouchableOpacity>
-        ))}
-      </View>
+    //   <View style={styles.otpContainer}>
+    //     {otp.map((digit, index) => (
+    //       <TouchableOpacity
+    //         key={index}
+    //         style={[
+    //           styles.otpBox,
+    //           focusedIndex === index && styles.otpBoxFocused
+    //         ]}
+    //         onPress={() => handleBoxPress(index)}
+    //       >
+    //         <Text style={styles.otpDigit}>{digit}</Text>
+    //       </TouchableOpacity>
+    //     ))}
+    //   </View>
       
-      <TextInput
-        ref={textInputRef}
-        style={styles.hiddenInput}
-        value=""
-        onKeyPress={handleKeyPress}
-        onChangeText={handleOtpChange}
-        keyboardType="numeric"
-        maxLength={1}
-        autoFocus={true}
-        returnKeyType="done"
-        blurOnSubmit={false}
-        selectTextOnFocus={true}
-      />
+    //   <TextInput
+    //     ref={textInputRef}
+    //     style={styles.hiddenInput}
+    //     value=""
+    //     onKeyPress={handleKeyPress}
+    //     onChangeText={handleOtpChange}
+    //     keyboardType="numeric"
+    //     maxLength={1}
+    //     autoFocus={true}
+    //     returnKeyType="done"
+    //     blurOnSubmit={false}
+    //     selectTextOnFocus={true}
+    //   />
       
-      <View style={styles.resendContainer}>
-        <Text style={styles.resendText}>Didn't receive code? </Text>
-        <TouchableOpacity>
-          <Text style={styles.resendLink}>Resend</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
+    //   <View style={styles.resendContainer}>
+    //     <Text style={styles.resendText}>Didn't receive code? </Text>
+    //     <TouchableOpacity>
+    //       <Text style={styles.resendLink}>Resend</Text>
+    //     </TouchableOpacity>
+    //   </View>
+    // </View>
+    <Text>hlo</Text>
   );
 }
 
