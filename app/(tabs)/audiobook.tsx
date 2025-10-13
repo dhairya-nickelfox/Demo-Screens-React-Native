@@ -211,7 +211,7 @@ const styles = StyleSheet.create({
     paddingTop: SCREEN_HEIGHT * 0.06,
     paddingBottom: SCREEN_HEIGHT * 0.02,
     position: 'relative',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#F8F5F4',
   },
   navigationContainer: {
     width: SCREEN_WIDTH * 0.11,
