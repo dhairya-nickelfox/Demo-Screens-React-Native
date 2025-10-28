@@ -1,17 +1,102 @@
+import { Audio } from 'expo-av';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Dimensions, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 export default function AudioPlayerScreen() {
   const router = useRouter();
+  const [sound, setSound] = useState<Audio.Sound | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [playbackSpeed, setPlaybackSpeed] = useState('1.0x');
+  const [position, setPosition] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [playbackSpeed, setPlaybackSpeed] = useState(1.0);
+  const [showSpeedSelector, setShowSpeedSelector] = useState(false);
 
-  const togglePlayPause = () => {
-    setIsPlaying(!isPlaying);
+  // Load audio on component mount
+  useEffect(() => {
+    loadAudio();
+    return () => {
+      if (sound) {
+        sound.unloadAsync();
+      }
+    };
+  }, []);
+
+  const loadAudio = async () => {
+    try {
+      await Audio.setAudioModeAsync({
+        playsInSilentModeIOS: true,
+        staysActiveInBackground: true,
+      });
+
+      const { sound: newSound } = await Audio.Sound.createAsync(
+        require('../../assets/images/audio.mp3'),
+        { shouldPlay: false },
+        onPlaybackStatusUpdate
+      );
+      setSound(newSound);
+    } catch (error) {
+      console.error('Error loading audio:', error);
+    }
+  };
+
+  const onPlaybackStatusUpdate = (status: any) => {
+    if (status.isLoaded) {
+      setPosition(status.positionMillis || 0);
+      setDuration(status.durationMillis || 0);
+      setIsPlaying(status.isPlaying);
+    }
+  };
+
+  const togglePlayPause = async () => {
+    if (!sound) return;
+
+    try {
+      if (isPlaying) {
+        await sound.pauseAsync();
+      } else {
+        await sound.playAsync();
+      }
+    } catch (error) {
+      console.error('Error toggling playback:', error);
+    }
+  };
+
+  const skipForward = async () => {
+    if (!sound) return;
+    const newPosition = Math.min(position + 10000, duration);
+    await sound.setPositionAsync(newPosition);
+  };
+
+  const skipBackward = async () => {
+    if (!sound) return;
+    const newPosition = Math.max(position - 10000, 0);
+    await sound.setPositionAsync(newPosition);
+  };
+
+  const changePlaybackSpeed = async () => {
+    if (!sound) return;
+    const speeds = [1.0, 1.25, 1.5, 2.0];
+    const currentIndex = speeds.indexOf(playbackSpeed);
+    const nextSpeed = speeds[(currentIndex + 1) % speeds.length];
+    
+    await sound.setRateAsync(nextSpeed, true);
+    setPlaybackSpeed(nextSpeed);
+  };
+
+  const formatTime = (millis: number) => {
+    const totalSeconds = Math.floor(millis / 1000);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  };
+
+  const getProgress = () => {
+    if (duration === 0) return 0;
+    return position / duration;
   };
 
   return (
@@ -54,23 +139,29 @@ export default function AudioPlayerScreen() {
       {/* Audio Waveform */}
       <View style={styles.waveformContainer}>
         <View style={styles.waveform}>
-          {[9, 18, 14.63, 22.5, 27, 18, 18, 11.25, 22.5, 22.5, 27, 14.63, 6.75, 18, 14.63, 18, 27, 18, 22.5, 14.63, 6.75, 11.25, 18, 22.5, 14.63, 9, 18, 14.63, 22.5, 6.75, 14.63, 14.63, 18, 14.63, 22.5, 11.25, 18, 14.63, 18].map((height, index) => (
-            <View
-              key={index}
-              style={[
-                styles.waveformBar,
-                {
-                  height: (height / 27) * 27,
-                  opacity: index <= 15 ? 1 : 0.3, // Progress indicator
-                  backgroundColor: index <= 15 ? '#FF7A2D' : '#FF7A2D',
-                },
-              ]}
-            />
-          ))}
+          {[9, 18, 14.63, 22.5, 27, 18, 18, 11.25, 22.5, 22.5, 27, 14.63, 6.75, 18, 14.63, 18, 27, 18, 22.5, 14.63, 6.75, 11.25, 18, 22.5, 14.63, 9, 18, 14.63, 22.5, 6.75, 14.63, 14.63, 18, 14.63, 22.5, 11.25, 18, 14.63, 18].map((height, index) => {
+            const progress = getProgress();
+            const barProgress = index / 39;
+            const isActive = barProgress <= progress;
+            
+            return (
+              <View
+                key={index}
+                style={[
+                  styles.waveformBar,
+                  {
+                    height: (height / 27) * 27,
+                    opacity: isActive ? 1 : 0.3,
+                    backgroundColor: '#FF7A2D',
+                  },
+                ]}
+              />
+            );
+          })}
         </View>
         <View style={styles.timeContainer}>
-          <Text style={styles.timeText}>28:12</Text>
-          <Text style={styles.timeText}>48:57</Text>
+          <Text style={styles.timeText}>{formatTime(position)}</Text>
+          <Text style={styles.timeText}>{formatTime(duration)}</Text>
         </View>
       </View>
 
@@ -81,16 +172,14 @@ export default function AudioPlayerScreen() {
             source={require('../../assets/images/play-back.png')}
             style={styles.skipIcon}
           />
-         
         </TouchableOpacity>
 
         {/* Backward 10s */}
-        <TouchableOpacity style={styles.controlButton}>
+        <TouchableOpacity style={styles.controlButton} onPress={skipBackward}>
           <Image
             source={require('../../assets/images/10sec-backward.png')}
             style={styles.skipIcon}
           />
-         
         </TouchableOpacity>
 
         {/* Play/Pause Button */}
@@ -111,21 +200,19 @@ export default function AudioPlayerScreen() {
         </TouchableOpacity>
 
         {/* Forward 10s */}
-        <TouchableOpacity style={styles.controlButton}>
+        <TouchableOpacity style={styles.controlButton} onPress={skipForward}>
           <Image
             source={require('../../assets/images/10sec.png')}
             style={[styles.skipIcon, styles.skipIconForward]}
           />
-         
         </TouchableOpacity>
+        
         <TouchableOpacity style={styles.controlButton}>
           <Image
             source={require('../../assets/images/play-next.png')}
             style={styles.skipIcon}
           />
-         
         </TouchableOpacity>
-        
       </View>
 
       {/* Bottom Controls */}
@@ -144,8 +231,8 @@ export default function AudioPlayerScreen() {
           />
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.speedButton}>
-          <Text style={styles.speedText}>{playbackSpeed}</Text>
+        <TouchableOpacity style={styles.speedButton} onPress={changePlaybackSpeed}>
+          <Text style={styles.speedText}>{playbackSpeed.toFixed(1)}x</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.bottomButton}>
